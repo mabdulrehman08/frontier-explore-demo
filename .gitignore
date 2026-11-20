@@ -1,0 +1,4 @@
+__pycache__/
+out/frame_*.png
+out/map.npz
+.venv/
