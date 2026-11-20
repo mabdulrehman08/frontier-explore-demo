@@ -27,13 +27,16 @@ def scan(world, known, pose, hits, radius=15):
                     distances[None, :, None] *
                     np.stack([np.sin(angles), np.cos(angles)], axis=1)[:, None, :]).astype(int)
     for ray in rays:
-        for y, x in ray:
-            if not (0 <= y < world.shape[0] and 0 <= x < world.shape[1]):
-                break
-            known[y, x] = int(world[y, x])
-            if world[y, x]:
-                hits.add((y, x))
-                break
+        valid = ((ray[:, 0] >= 0) & (ray[:, 0] < world.shape[0]) &
+                 (ray[:, 1] >= 0) & (ray[:, 1] < world.shape[1]))
+        ray = ray[:np.argmax(~valid)] if not valid.all() else ray
+        if not len(ray):
+            continue
+        occupied = world[ray[:, 0], ray[:, 1]]
+        if occupied.any():
+            ray = ray[:np.argmax(occupied) + 1]
+            hits.add(tuple(ray[-1]))
+        known[ray[:, 0], ray[:, 1]] = world[ray[:, 0], ray[:, 1]].astype(np.int8)
 
 
 def neighbors(cell, shape):
